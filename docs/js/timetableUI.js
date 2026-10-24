@@ -359,7 +359,7 @@ class TimetableUI {
                 return `
                   <div class="grid-class-item ${isActiveNow ? 'is-active-now' : ''}"
                        style="border-left-color: ${cls.color || '#3b82f6'};"
-                       onclick="window.timetableUI.openViewDetailsModal(${cls.id})">
+                       onclick="window.timetableUI.openViewDetailsModal('${cls.id}')">
                     <div class="grid-class-time">${this.format12Hour(cls.start_time)} - ${this.format12Hour(cls.end_time)}</div>
                     <div class="grid-class-subject">${cls.subject}</div>
                     <div class="grid-class-teacher">${cls.teacher_name}</div>
@@ -381,7 +381,7 @@ class TimetableUI {
 
   isClassActiveNow(cls, day) {
     if (window.liveTracker && window.liveTracker.lastData && window.liveTracker.lastData.running_now) {
-      return window.liveTracker.lastData.running_now.some(r => r.id === cls.id);
+      return window.liveTracker.lastData.running_now.some(r => String(r.id) === String(cls.id));
     }
     return false;
   }
@@ -394,10 +394,22 @@ class TimetableUI {
     const filtered = this.getFilteredClasses();
 
     if (filtered.length === 0) {
+      const isSearchActive = Boolean(this.searchQuery || this.currentDayFilter || this.currentCourseFilter || this.currentSubjectFilter || this.currentTeacherFilter);
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-            No classes match your current search and filter criteria.
+          <td colspan="7" style="text-align: center; padding: 3.5rem 1rem;">
+            <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">${isSearchActive ? '🔍' : '📚'}</div>
+            <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.35rem;">
+              ${isSearchActive ? 'No classes matched your search/filter' : 'No classes added yet'}
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+              ${isSearchActive ? 'Try clearing your filters to see all classes.' : 'Your timetable database is clean and ready. Add your first class schedule!'}
+            </p>
+            ${!isSearchActive ? `
+              <button class="btn btn-primary" onclick="window.timetableUI.openClassModal()" style="display: inline-flex; margin: 0 auto;">
+                + Add First Class
+              </button>
+            ` : ''}
           </td>
         </tr>
       `;
@@ -448,19 +460,19 @@ class TimetableUI {
           </td>
           <td>
             <div class="table-actions">
-              <button class="action-btn" title="View Details" onclick="window.timetableUI.openViewDetailsModal(${cls.id})">
+              <button class="action-btn" title="View Details" onclick="window.timetableUI.openViewDetailsModal('${cls.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
               </button>
-              <button class="action-btn" title="Edit Class" onclick="window.timetableUI.openEditClassModal(${cls.id})">
+              <button class="action-btn" title="Edit Class" onclick="window.timetableUI.openEditClassModal('${cls.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
               </button>
-              <button class="action-btn btn-delete" title="Delete Class" onclick="window.timetableUI.deleteClass(${cls.id})">
+              <button class="action-btn btn-delete" title="Delete Class" onclick="window.timetableUI.deleteClass('${cls.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

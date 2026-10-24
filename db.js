@@ -30,221 +30,6 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_classes_subject ON classes(subject);
     CREATE INDEX IF NOT EXISTS idx_classes_teacher ON classes(teacher_name);
   `);
-
-  // Check if initial seed is needed
-  const countRow = db.prepare('SELECT COUNT(*) as count FROM classes').get();
-  if (countRow.count === 0) {
-    seedDemoData();
-  }
-}
-
-// Seed realistic schedule for The Inspirational Academy
-function seedDemoData() {
-  const sampleClasses = [
-    {
-      course: 'Matric Science Excellence',
-      subject: 'Physics',
-      teacher_name: 'Prof. Salman Tariq',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '08:30',
-      end_time: '10:00',
-      start_date: '2026-09-01',
-      end_date: '2027-05-31',
-      room: 'Science Lab 1',
-      batch: 'Matric-A Morning',
-      color: '#2563eb', // Royal Blue
-      notes: 'Mechanics, Newton Laws, Kinetic energy and laboratory demonstrations.',
-      status: 'Active'
-    },
-    {
-      course: 'FSc Pre-Medical Premier',
-      subject: 'Biology & Genetics',
-      teacher_name: 'Dr. Ayesha Khan',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '10:15',
-      end_time: '11:45',
-      start_date: '2026-09-01',
-      end_date: '2027-06-30',
-      room: 'Lecture Hall B',
-      batch: 'Pre-Med Gold',
-      color: '#059669', // Emerald
-      notes: 'Cellular respiration, molecular genetics, and cytology slide preparation.',
-      status: 'Active'
-    },
-    {
-      course: 'O-Level Cambridge Program',
-      subject: 'Mathematics (Syllabus D)',
-      teacher_name: 'Sir Bilal Ahmed',
-      days: JSON.stringify(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']),
-      start_time: '12:00',
-      end_time: '13:15',
-      start_date: '2026-08-15',
-      end_date: '2027-05-15',
-      room: 'Room 204',
-      batch: 'O3 Cambridge',
-      color: '#d97706', // Amber
-      notes: 'Algebraic manipulations, trigonometry, and past paper practice sessions.',
-      status: 'Active'
-    },
-    {
-      course: 'Computer Science & AI Track',
-      subject: 'Data Structures & Algorithms',
-      teacher_name: 'Engr. Hamza Tariq',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '14:00',
-      end_time: '15:30',
-      start_date: '2026-09-10',
-      end_date: '2027-04-30',
-      room: 'Computer Lab Alpha',
-      batch: 'CS-Batch 1',
-      color: '#7c3aed', // Purple
-      notes: 'Binary search trees, graph algorithms, and hands-on coding challenges.',
-      status: 'Active'
-    },
-    {
-      course: 'FSc Pre-Engineering',
-      subject: 'Chemistry (Organic & Inorganic)',
-      teacher_name: 'Prof. Tariq Mehmood',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '15:45',
-      end_time: '17:15',
-      start_date: '2026-09-01',
-      end_date: '2027-06-15',
-      room: 'Chemistry Lab',
-      batch: 'Pre-Eng 2026',
-      color: '#0284c7', // Cyan/Sky
-      notes: 'Hydrocarbons reaction mechanisms, stoichiometry calculations, and titration.',
-      status: 'Active'
-    },
-    {
-      course: 'IELTS & Professional English',
-      subject: 'English Language & Linguistics',
-      teacher_name: 'Ms. Fatima Zahra',
-      days: JSON.stringify(['Tue', 'Thu', 'Sat']),
-      start_time: '09:00',
-      end_time: '10:30',
-      start_date: '2026-10-01',
-      end_date: '2027-01-31',
-      room: 'Language Studio 3',
-      batch: 'IELTS Intensive',
-      color: '#e11d48', // Rose
-      notes: 'Academic writing Task 2, fluency drills, and active listening seminars.',
-      status: 'Active'
-    },
-    {
-      course: 'A-Level Cambridge Elite',
-      subject: 'Economics & Business Studies',
-      teacher_name: 'Sir Usman Ghani',
-      days: JSON.stringify(['Tue', 'Thu', 'Sat']),
-      start_time: '11:00',
-      end_time: '12:30',
-      start_date: '2026-08-20',
-      end_date: '2027-05-30',
-      room: 'Conference Room 1',
-      batch: 'A2 Economics',
-      color: '#4f46e5', // Indigo
-      notes: 'Macroeconomic fiscal policy, market structures, and financial case studies.',
-      status: 'Active'
-    },
-    {
-      course: 'Web & Mobile App Development',
-      subject: 'Full-Stack JavaScript & React',
-      teacher_name: 'Engr. Zainab Raza',
-      days: JSON.stringify(['Tue', 'Thu', 'Sat']),
-      start_time: '14:30',
-      end_time: '16:00',
-      start_date: '2026-10-01',
-      end_date: '2027-03-31',
-      room: 'Innovation Tech Hub',
-      batch: 'Bootcamp 2026',
-      color: '#0d9488', // Teal
-      notes: 'Modern responsive web development, state management, and Node backend architecture.',
-      status: 'Active'
-    },
-    {
-      course: 'Civil Services / CSS Foundation',
-      subject: 'Current Affairs & Pakistan Studies',
-      teacher_name: 'Prof. Noman Siddiqui',
-      days: JSON.stringify(['Sat', 'Sun']),
-      start_time: '10:00',
-      end_time: '12:30',
-      start_date: '2026-09-15',
-      end_date: '2027-06-30',
-      room: 'Executive Hall',
-      batch: 'Weekend CSS Group',
-      color: '#b45309', // Dark Amber
-      notes: 'Geopolitical analysis, constitutional history, and analytical essay drafting.',
-      status: 'Active'
-    },
-    {
-      course: 'Robotics & STEM for Young Minds',
-      subject: 'Applied Robotics & Microcontrollers',
-      teacher_name: 'Sir Hamza Ali',
-      days: JSON.stringify(['Sat', 'Sun']),
-      start_time: '14:00',
-      end_time: '16:00',
-      start_date: '2026-10-05',
-      end_date: '2027-02-28',
-      room: 'STEM Robotics Lab',
-      batch: 'Junior Explorers',
-      color: '#ea580c', // Orange
-      notes: 'Sensors, Arduino programming, motor drivers, and obstacle-avoiding bot project.',
-      status: 'Active'
-    },
-    {
-      course: 'Executive Leadership & Tech Mastery',
-      subject: 'AI & Machine Learning Studio',
-      teacher_name: 'Dr. Hamza Farooq',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '20:00',
-      end_time: '21:30',
-      start_date: '2026-09-01',
-      end_date: '2027-06-30',
-      room: 'Executive Tech Suite 1',
-      batch: 'Evening Executive',
-      color: '#10b981', // Emerald
-      notes: 'Applied deep learning, neural networks, and modern AI industry workflows.',
-      status: 'Active'
-    },
-    {
-      course: 'Spoken English & Debate Forum',
-      subject: 'Public Speaking & Rhetoric',
-      teacher_name: 'Ms. Areeba Naveed',
-      days: JSON.stringify(['Mon', 'Wed', 'Fri']),
-      start_time: '21:45',
-      end_time: '22:45',
-      start_date: '2026-09-01',
-      end_date: '2027-04-30',
-      room: 'Auditorium Hall',
-      batch: 'Night Forum',
-      color: '#6366f1',
-      notes: 'Debate tournaments, speech modulation, and parliamentary procedures.',
-      status: 'Active'
-    }
-  ];
-
-  const insertStmt = db.prepare(`
-    INSERT INTO classes (course, subject, teacher_name, days, start_time, end_time, start_date, end_date, room, batch, color, notes, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  for (const c of sampleClasses) {
-    insertStmt.run(
-      c.course,
-      c.subject,
-      c.teacher_name,
-      c.days,
-      c.start_time,
-      c.end_time,
-      c.start_date,
-      c.end_date,
-      c.room,
-      c.batch,
-      c.color,
-      c.notes,
-      c.status
-    );
-  }
 }
 
 // Queries
@@ -300,7 +85,7 @@ function getAllClasses(filters = {}) {
 
 function getClassById(id) {
   const stmt = db.prepare('SELECT * FROM classes WHERE id = ?');
-  const row = stmt.get(id);
+  const row = stmt.get(Number(id) || id);
   if (!row) return null;
   try {
     row.days = JSON.parse(row.days);
@@ -375,7 +160,7 @@ function updateClass(id, data) {
     data.color || '#4f46e5',
     (data.notes || '').trim(),
     data.status || 'Active',
-    id
+    Number(id) || id
   );
 
   return getClassById(id);
@@ -383,7 +168,7 @@ function updateClass(id, data) {
 
 function deleteClass(id) {
   const stmt = db.prepare('DELETE FROM classes WHERE id = ?');
-  const result = stmt.run(id);
+  const result = stmt.run(Number(id) || id);
   return result.changes > 0;
 }
 
@@ -421,11 +206,10 @@ function clearAllClasses() {
 function resetToDefault() {
   db.exec('DELETE FROM classes');
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'classes'");
-  seedDemoData();
-  return getAllClasses();
+  return [];
 }
 
-// Initialise DB immediately
+// Initialise DB schema immediately
 initDatabase();
 
 module.exports = {
