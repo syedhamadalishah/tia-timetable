@@ -156,6 +156,11 @@ class TimetableUI {
       btnResetDemo.addEventListener('click', () => this.confirmResetDemo());
     }
 
+    const btnClearAll = document.getElementById('btnClearAllClasses');
+    if (btnClearAll) {
+      btnClearAll.addEventListener('click', () => this.clearAllClasses());
+    }
+
     const btnPrint = document.getElementById('btnPrintTimetable');
     if (btnPrint) {
       btnPrint.addEventListener('click', () => window.print());
@@ -526,6 +531,21 @@ class TimetableUI {
       }
     });
 
+    // Configure Delete button in modal footer
+    const btnDeleteCurrent = document.getElementById('btnDeleteCurrentClass');
+    if (btnDeleteCurrent) {
+      if (cls) {
+        btnDeleteCurrent.style.display = 'inline-flex';
+        btnDeleteCurrent.onclick = () => {
+          this.closeClassModal();
+          this.deleteClass(cls.id);
+        };
+      } else {
+        btnDeleteCurrent.style.display = 'none';
+        btnDeleteCurrent.onclick = null;
+      }
+    }
+
     modalBackdrop.classList.add('open');
   }
 
@@ -536,14 +556,14 @@ class TimetableUI {
   }
 
   openEditClassModal(id) {
-    const cls = this.classes.find(c => c.id === id);
+    const cls = this.classes.find(c => String(c.id) === String(id));
     if (cls) {
       this.openClassModal(cls);
     }
   }
 
   openViewDetailsModal(id) {
-    const cls = this.classes.find(c => c.id === id);
+    const cls = this.classes.find(c => String(c.id) === String(id));
     if (!cls) return;
 
     const detailsModal = document.getElementById('detailsModalBackdrop');
@@ -619,13 +639,22 @@ class TimetableUI {
         </p>
       </div>` : ''}
 
-      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-        <button class="btn btn-outline" onclick="document.getElementById('detailsModalBackdrop').classList.remove('open')">
-          Close
+      <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <button class="btn btn-outline" style="border-color: rgba(239,68,68,0.5); color: #ef4444;" onclick="document.getElementById('detailsModalBackdrop').classList.remove('open'); window.timetableUI.deleteClass('${cls.id}')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Delete Class
         </button>
-        <button class="btn btn-primary" onclick="document.getElementById('detailsModalBackdrop').classList.remove('open'); window.timetableUI.openEditClassModal(${cls.id})">
-          Edit Class
-        </button>
+        <div style="display: flex; gap: 0.75rem; margin-left: auto;">
+          <button class="btn btn-outline" onclick="document.getElementById('detailsModalBackdrop').classList.remove('open')">
+            Close
+          </button>
+          <button class="btn btn-primary" onclick="document.getElementById('detailsModalBackdrop').classList.remove('open'); window.timetableUI.openEditClassModal('${cls.id}')">
+            ✏️ Edit Class
+          </button>
+        </div>
       </div>
     `;
 
@@ -681,34 +710,61 @@ class TimetableUI {
     try {
       if (this.editingClassId) {
         await window.tiaAPI.updateClass(this.editingClassId, payload);
-        window.tiaApp.showToast('Class schedule updated successfully!', 'success');
+        window.tiaApp.showToast('Class schedule updated successfully in database!', 'success');
       } else {
         await window.tiaAPI.createClass(payload);
-        window.tiaApp.showToast('New class added to Timetable!', 'success');
+        window.tiaApp.showToast('New class added to Timetable & Database!', 'success');
       }
 
       this.closeClassModal();
       await this.refreshData();
       await this.populateFilterDropdowns();
+      if (window.liveTracker) {
+        window.liveTracker.fetchAndUpdateLiveRadar();
+      }
     } catch (err) {
       window.tiaApp.showToast(err.message || 'Error saving class', 'error');
     }
   }
 
   async deleteClass(id) {
-    const cls = this.classes.find(c => c.id === id);
+    const cls = this.classes.find(c => String(c.id) === String(id));
     const name = cls ? `${cls.subject} (${cls.teacher_name})` : 'this class';
-    if (!confirm(`Are you sure you want to remove "${name}" from the timetable database?`)) {
+    if (!confirm(`Are you sure you want to permanently delete "${name}" from the timetable and database?`)) {
       return;
     }
 
     try {
       await window.tiaAPI.deleteClass(id);
-      window.tiaApp.showToast('Class removed successfully', 'success');
+      window.tiaApp.showToast(`Class "${name}" deleted from database`, 'success');
       await this.refreshData();
       await this.populateFilterDropdowns();
+      if (window.liveTracker) {
+        window.liveTracker.fetchAndUpdateLiveRadar();
+      }
     } catch (err) {
       window.tiaApp.showToast(err.message || 'Error deleting class', 'error');
+    }
+  }
+
+  async clearAllClasses() {
+    if (!confirm('⚠️ WARNING: Are you sure you want to delete ALL classes from the timetable and database? This action cannot be undone.')) {
+      return;
+    }
+    if (!confirm('Please confirm once more: All class schedules will be permanently erased.')) {
+      return;
+    }
+
+    try {
+      await window.tiaAPI.clearAllClasses();
+      window.tiaApp.showToast('All classes have been removed from the database', 'success');
+      await this.refreshData();
+      await this.populateFilterDropdowns();
+      if (window.liveTracker) {
+        window.liveTracker.fetchAndUpdateLiveRadar();
+      }
+    } catch (err) {
+      window.tiaApp.showToast(err.message || 'Error clearing database', 'error');
     }
   }
 

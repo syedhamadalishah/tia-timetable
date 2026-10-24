@@ -175,7 +175,7 @@ class LiveClassTracker {
     container.innerHTML = running.map(cls => {
       const formatDays = Array.isArray(cls.days) ? cls.days.join(', ') : cls.days;
       return `
-        <div class="live-class-card" style="border-top-color: ${cls.color || '#10b981'};">
+        <div class="live-class-card" style="border-top-color: ${cls.color || '#10b981'}; cursor: pointer;" onclick="window.timetableUI.openViewDetailsModal('${cls.id}')" title="Click to view details, edit or delete class">
           <div class="live-card-top">
             <div class="live-pulse-badge">
               <span class="pulse-dot"></span>
@@ -251,7 +251,7 @@ class LiveClassTracker {
       }
 
       return `
-        <div class="upcoming-card" style="border-left: 3px solid ${cls.color || '#3b82f6'};">
+        <div class="upcoming-card" style="border-left: 3px solid ${cls.color || '#3b82f6'}; cursor: pointer;" onclick="window.timetableUI.openViewDetailsModal('${cls.id}')" title="Click to view details, edit or delete class">
           <div class="upcoming-card-top">
             <span class="upcoming-badge">
               ⏱️ ${waitString}

@@ -205,6 +205,7 @@ class TIA_API {
   constructor() {
     this.isServerAvailable = false;
     this.checkServerConnection();
+    this.syncInitialData();
   }
 
   async checkServerConnection() {
@@ -224,6 +225,28 @@ class TIA_API {
     }
   }
 
+  async syncInitialData() {
+    try {
+      const res = await fetch('data/classes.json', { cache: 'no-store' });
+      if (res.ok) {
+        const payload = await res.json();
+        const serverClasses = payload.classes || (Array.isArray(payload) ? payload : null);
+        const serverVersion = payload.updated_at || '';
+        const localVersion = localStorage.getItem('tia_data_version') || '';
+
+        if (serverClasses && Array.isArray(serverClasses)) {
+          if (!localStorage.getItem('tia_initialized') || (serverVersion && serverVersion !== localVersion && !localStorage.getItem('tia_has_user_edits'))) {
+            localStorage.setItem('tia_classes', JSON.stringify(serverClasses));
+            localStorage.setItem('tia_initialized', 'true');
+            localStorage.setItem('tia_data_version', serverVersion);
+          }
+        }
+      }
+    } catch {
+      // offline or static mode without data/classes.json
+    }
+  }
+
   updateConnectionStatus(online) {
     const statusBadge = document.getElementById('dbConnectionStatus');
     if (statusBadge) {
@@ -231,24 +254,26 @@ class TIA_API {
         statusBadge.innerHTML = `<span class="pulse-dot"></span> SQLite Database Online (tia_timetable.db)`;
         statusBadge.classList.add('connected');
       } else {
-        statusBadge.innerHTML = `<span style="color:#fbbf24">●</span> Local Storage Mode (Offline Client)`;
+        statusBadge.innerHTML = `<span style="color:#10b981">●</span> Local Storage Database (Persistent Client)`;
         statusBadge.classList.remove('connected');
       }
     }
   }
 
   initLocalStorageFallback() {
-    if (!localStorage.getItem('tia_classes')) {
+    if (!localStorage.getItem('tia_initialized')) {
       localStorage.setItem('tia_classes', JSON.stringify(DEFAULT_DEMO_CLASSES));
+      localStorage.setItem('tia_initialized', 'true');
     }
   }
 
   getLocalClasses() {
     this.initLocalStorageFallback();
     try {
-      return JSON.parse(localStorage.getItem('tia_classes') || '[]');
+      const raw = localStorage.getItem('tia_classes');
+      return raw ? JSON.parse(raw) : [];
     } catch {
-      return DEFAULT_DEMO_CLASSES;
+      return [];
     }
   }
 
@@ -275,10 +300,11 @@ class TIA_API {
       if (filters.search) {
         const q = filters.search.toLowerCase();
         list = list.filter(c =>
-          c.course.toLowerCase().includes(q) ||
-          c.subject.toLowerCase().includes(q) ||
-          c.teacher_name.toLowerCase().includes(q) ||
-          (c.room && c.room.toLowerCase().includes(q))
+          (c.course && c.course.toLowerCase().includes(q)) ||
+          (c.subject && c.subject.toLowerCase().includes(q)) ||
+          (c.teacher_name && c.teacher_name.toLowerCase().includes(q)) ||
+          (c.room && c.room.toLowerCase().includes(q)) ||
+          (c.batch && c.batch.toLowerCase().includes(q))
         );
       }
       if (filters.subject) list = list.filter(c => c.subject === filters.subject);
@@ -314,6 +340,7 @@ class TIA_API {
       if (!res.ok) throw new Error(json.message || 'Error creating class');
       return json.data;
     } else {
+      localStorage.setItem('tia_has_user_edits', 'true');
       const list = this.getLocalClasses();
       const newClass = {
         ...data,
@@ -337,10 +364,11 @@ class TIA_API {
       if (!res.ok) throw new Error(json.message || 'Error updating class');
       return json.data;
     } else {
+      localStorage.setItem('tia_has_user_edits', 'true');
       const list = this.getLocalClasses();
       const idx = list.findIndex(c => String(c.id) === String(id));
       if (idx !== -1) {
-        list[idx] = { ...list[idx], ...data, updated_at: new Date().toISOString() };
+        list[idx] = { ...list[idx], ...data, id: list[idx].id, updated_at: new Date().toISOString() };
         this.saveLocalClasses(list);
         return list[idx];
       }
@@ -355,9 +383,23 @@ class TIA_API {
       if (!res.ok) throw new Error(json.message || 'Error deleting class');
       return true;
     } else {
+      localStorage.setItem('tia_has_user_edits', 'true');
       let list = this.getLocalClasses();
       list = list.filter(c => String(c.id) !== String(id));
       this.saveLocalClasses(list);
+      return true;
+    }
+  }
+
+  async clearAllClasses() {
+    if (this.isServerAvailable) {
+      const res = await fetch(`${API_BASE}/classes`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Error clearing classes');
+      return true;
+    } else {
+      localStorage.setItem('tia_has_user_edits', 'true');
+      this.saveLocalClasses([]);
       return true;
     }
   }

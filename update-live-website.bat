@@ -5,7 +5,8 @@ echo =====================================================================
 echo    THE INSPIRATIONAL ACADEMY - 1-CLICK LIVE WEBSITE UPDATER
 echo =====================================================================
 echo.
-echo [1/3] Syncing updated files from public/ to docs/...
+echo [1/3] Exporting latest database records and syncing files...
+node -e "try { const db = require('./db'); const fs = require('node:fs'); const all = db.getAllClasses(); const payload = { updated_at: new Date().toISOString(), classes: all }; fs.writeFileSync('public/data/classes.json', JSON.stringify(payload, null, 2)); } catch(e) {}"
 powershell -Command "Copy-Item -Path 'public\*' -Destination 'docs\' -Recurse -Force; if (Test-Path 'google*.html') { Copy-Item 'google*.html' 'docs\'; Copy-Item 'google*.html' 'public\' }"
 
 echo.

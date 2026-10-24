@@ -446,6 +446,14 @@
             </button>
             <input type="file" id="inputImportFile" accept=".json" style="display: none;">
 
+            <button class="btn btn-outline" id="btnClearAllClasses" style="border-color: rgba(239,68,68,0.5); color: #ef4444;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Clear All Classes from Database</span>
+            </button>
+
             <button class="btn btn-outline" id="btnResetDatabase" style="border-color: rgba(244,63,94,0.3); color: #f43f5e;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="1 4 1 10 7 10"></polyline>
@@ -598,9 +606,18 @@
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" id="btnCancelClassModal">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btnSubmitClassForm">Save Class to Timetable</button>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <button type="button" class="btn btn-outline" id="btnDeleteCurrentClass" style="display: none; border-color: rgba(239,68,68,0.5); color: #ef4444;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Delete This Class
+          </button>
+          <div style="display: flex; gap: 0.75rem; margin-left: auto;">
+            <button type="button" class="btn btn-outline" id="btnCancelClassModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitClassForm">Save Class to Timetable</button>
+          </div>
         </div>
       </form>
     </div>

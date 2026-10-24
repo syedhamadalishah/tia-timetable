@@ -412,6 +412,12 @@ function getDistinctMetadata() {
   return { courses, subjects, teachers, rooms };
 }
 
+function clearAllClasses() {
+  db.exec('DELETE FROM classes');
+  db.exec("DELETE FROM sqlite_sequence WHERE name = 'classes'");
+  return true;
+}
+
 function resetToDefault() {
   db.exec('DELETE FROM classes');
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'classes'");
@@ -429,6 +435,7 @@ module.exports = {
   addClass,
   updateClass,
   deleteClass,
+  clearAllClasses,
   getStats,
   getDistinctMetadata,
   resetToDefault

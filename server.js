@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('node:path');
+const fs = require('node:fs');
 const db = require('./db');
 
 const app = express();
@@ -9,6 +10,31 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Helper: Auto-sync SQLite classes to public/data/classes.json and docs/data/classes.json
+function syncJsonBackup() {
+  try {
+    const all = db.getAllClasses();
+    const payload = {
+      updated_at: new Date().toISOString(),
+      classes: all
+    };
+    const jsonStr = JSON.stringify(payload, null, 2);
+
+    const publicDataDir = path.join(__dirname, 'public', 'data');
+    if (!fs.existsSync(publicDataDir)) fs.mkdirSync(publicDataDir, { recursive: true });
+    fs.writeFileSync(path.join(publicDataDir, 'classes.json'), jsonStr, 'utf-8');
+
+    const docsDataDir = path.join(__dirname, 'docs', 'data');
+    if (fs.existsSync(path.join(__dirname, 'docs'))) {
+      if (!fs.existsSync(docsDataDir)) fs.mkdirSync(docsDataDir, { recursive: true });
+      fs.writeFileSync(path.join(docsDataDir, 'classes.json'), jsonStr, 'utf-8');
+    }
+  } catch (err) {
+    console.error('Error syncing classes.json:', err.message);
+  }
+}
+syncJsonBackup();
 
 // Helper: Calculate day name and time in minutes
 function timeToMinutes(timeStr) {
@@ -186,6 +212,7 @@ app.post('/api/classes', (req, res) => {
     }
 
     const created = db.addClass(req.body);
+    syncJsonBackup();
     res.status(201).json({ success: true, message: 'Class created successfully', data: created });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -216,13 +243,14 @@ app.put('/api/classes/:id', (req, res) => {
     }
 
     const updated = db.updateClass(req.params.id, req.body);
+    syncJsonBackup();
     res.json({ success: true, message: 'Class updated successfully', data: updated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// 6. Delete Class
+// 6. Delete Single Class
 app.delete('/api/classes/:id', (req, res) => {
   try {
     const existing = db.getClassById(req.params.id);
@@ -230,7 +258,19 @@ app.delete('/api/classes/:id', (req, res) => {
       return res.status(404).json({ success: false, message: 'Class not found' });
     }
     db.deleteClass(req.params.id);
+    syncJsonBackup();
     res.json({ success: true, message: 'Class deleted successfully', id: req.params.id });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 6b. Delete / Clear ALL Classes
+app.delete('/api/classes', (req, res) => {
+  try {
+    db.clearAllClasses();
+    syncJsonBackup();
+    res.json({ success: true, message: 'All classes cleared from database' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -259,6 +299,7 @@ app.get('/api/stats', (req, res) => {
 app.post('/api/reset-demo', (req, res) => {
   try {
     const data = db.resetToDefault();
+    syncJsonBackup();
     res.json({ success: true, message: 'Reset database to demo schedule', count: data.length });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -291,6 +332,7 @@ app.post('/api/import', (req, res) => {
       }
     }
 
+    syncJsonBackup();
     res.json({ success: true, message: `Successfully imported ${importedCount} classes` });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
