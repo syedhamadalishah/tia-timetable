@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: tia-timetable-portal
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
