@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tia-timetable-portal
+    name: theinspirationalacademy
     runtime: node
     plan: free
     region: oregon
